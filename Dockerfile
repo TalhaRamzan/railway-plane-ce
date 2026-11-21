@@ -24,7 +24,18 @@ ENV PYTHONUNBUFFERED=1 \
     PLANE_S3_ADDRESSING_STYLE=virtual \
     PLANE_BUCKET_CORS=1 \
     MAIL_PROVIDER=resend \
-    MAIL_BRIDGE_PORT=2525
+    MAIL_BRIDGE_PORT=2525 \
+    APP_PROTOCOL=https \
+    FILE_SIZE_LIMIT=10485760 \
+    ENABLE_SIGNUP=0 \
+    ENABLE_EMAIL_PASSWORD=1 \
+    ENABLE_MAGIC_LINK_LOGIN=0 \
+    ENABLE_SMTP=1 \
+    EMAIL_HOST=127.0.0.1 \
+    EMAIL_PORT=2525 \
+    EMAIL_USE_TLS=0 \
+    EMAIL_USE_SSL=0 \
+    EMAIL_FROM="Plane <plane@example.com>"
 
 COPY docker/ /opt/plane-railway/
 
@@ -39,5 +50,5 @@ RUN chmod 0755 /opt/plane-railway/entrypoint.sh /opt/plane-railway/*.py \
  && python3 -m py_compile /opt/plane-railway/bucket_cors.py /opt/plane-railway/mail_bridge.py /opt/plane-railway/crashwatch.py \
  && bash -n /opt/plane-railway/entrypoint.sh
 
-EXPOSE 80
+EXPOSE 8080
 CMD ["/opt/plane-railway/entrypoint.sh"]

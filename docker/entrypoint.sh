@@ -41,6 +41,9 @@ DOMAIN_NAME="${DOMAIN_NAME%%/*}"
 [ -n "$DOMAIN_NAME" ] || die "DOMAIN_NAME is empty. In Railway, generate a public domain for this service (Settings > Networking) or set DOMAIN_NAME."
 export DOMAIN_NAME
 export APP_PROTOCOL="${APP_PROTOCOL:-https}"
+# Caddy listens on SITE_ADDRESS. Follow Railway's PORT (injected as 8080 when the
+# template sets none) so the public domain and the healthcheck hit the same port.
+export SITE_ADDRESS="${SITE_ADDRESS:-:${PORT:-80}}"
 
 # ---------------------------------------------------------------- broker ----
 # Plane's Celery broker URL comes from AMQP_URL. Celery accepts a redis:// URL

@@ -165,3 +165,13 @@ memory on Railway's metrics.
 ### Railway test deploy results
 
 _Not run yet._ Fill in section C's blanks here.
+
+### Railway deploy results (2026-11-21, Hobby plan, project created 19:37 UTC, deleted 19:43 UTC)
+- PASS: Plane builds from this GitHub repo; `railway.json` healthcheck (`/api/instances/`) passes; deployment SUCCESS ~2 min after connect, migrations finish shortly after.
+- PASS: references to Railway Postgres, Railway Redis (`REDIS_URL` without db number) and the bucket (`${{Bucket.*}}`) resolve.
+- PASS: broker: Celery connected to `redis://…@redis.railway.internal:6379/1`; no RabbitMQ.
+- PASS: Railway bucket (Tigris, endpoint `t3.storageapi.dev`) accepted the CORS rule set on boot: preflight from the Plane domain → 200 with `Access-Control-Allow-Origin: <plane domain>`, other origins → 403.
+- PASS: `/` 200, `/god-mode/` 200, `/api/instances/` 200 with `enable_signup: false`, `is_smtp_configured: true` (mail bridge), file size limit 10 MB.
+- Measured RAM on Railway (idle, fresh): Plane ~790 MB, Postgres ~130 MB, Redis ~27 MB → ~0.95 GB ≈ $9–10/month RAM.
+- Note: Railway's default Redis database service was used (not the custom start command with `maxmemory`); works fine, the custom command is optional hardening.
+- Not tested on Railway (passed locally): admin setup, workspace/project/issue, presigned upload from a browser.

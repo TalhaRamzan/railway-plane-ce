@@ -1,0 +1,131 @@
+# LOCAL TESTING ONLY. Mirrors the Railway layout:
+#   plane    = this repo's Dockerfile (official Plane AIO image + our layer)
+#   postgres = Railway "PostgreSQL" database
+#   redis    = Railway "Redis" database (cache + Celery broker, no RabbitMQ)
+#   s3       = stand-in for the Railway Bucket (Railway buckets cannot run locally)
+#
+# Usage:
+#   cp .env.example .env    # then fill the four secrets (see .env.example)
+#   docker compose up --build
+#   open http://localhost/god-mode/   (create the instance admin first)
+#
+# Port 80 on the host must be free: Plane builds its URLs from DOMAIN_NAME
+# and the upstream start script does not accept a port in DOMAIN_NAME.
+# The s3 endpoint uses the name s3.localhost so that both the Plane container
+# (via extra_hosts) and your browser (*.localhost -> 127.0.0.1) can reach it.
+
+name: plane-ce-local
+
+services:
+  plane:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      s3:
+        condition: service_started
+    ports:
+      - "80:80"
+    extra_hosts:
+      - "s3.localhost:host-gateway"
+    environment:
+      DOMAIN_NAME: localhost
+      APP_PROTOCOL: http
+      PORT: "80"
+      SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY in .env}
+      LIVE_SERVER_SECRET_KEY: ${LIVE_SERVER_SECRET_KEY:?set LIVE_SERVER_SECRET_KEY in .env}
+      DATABASE_URL: postgresql://plane:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@postgres:5432/plane
+      REDIS_URL: redis://default:${REDIS_PASSWORD:?set REDIS_PASSWORD in .env}@redis:6379
+      # AMQP_URL is derived from REDIS_URL (database 1) by the entrypoint.
+      AWS_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: plane-local
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY:?set S3_SECRET_KEY in .env}
+      AWS_S3_BUCKET_NAME: plane-uploads
+      AWS_S3_ENDPOINT_URL: http://s3.localhost:9000
+      PLANE_S3_ADDRESSING_STYLE: path
+      FILE_SIZE_LIMIT: "10485760"
+      ENABLE_SIGNUP: "0"
+      ENABLE_EMAIL_PASSWORD: "1"
+      ENABLE_MAGIC_LINK_LOGIN: "0"
+      ENABLE_SMTP: "1"
+      EMAIL_HOST: 127.0.0.1
+      EMAIL_PORT: "2525"
+      EMAIL_USE_TLS: "0"
+      EMAIL_USE_SSL: "0"
+      EMAIL_HOST_USER: ""
+      EMAIL_HOST_PASSWORD: ""
+      EMAIL_FROM: ${MAIL_FROM:-Plane <plane@example.com>}
+      MAIL_PROVIDER: ${MAIL_PROVIDER:-resend}
+      MAIL_API_KEY: ${MAIL_API_KEY:-}
+      MAIL_FROM: ${MAIL_FROM:-}
+      PLANE_WORKER_CONCURRENCY: "2"
+      PLANE_GUNICORN_WORKERS: "1"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost/api/instances/"]
+      interval: 15s
+      timeout: 5s
+      retries: 40
+      start_period: 120s
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+
+  postgres:
+    image: postgres:17.11-alpine@sha256:e5d2edd28b1f8d40a0a6c0c9cdc545b19b56a0d5d88f94bc11a97d970d4700d0
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: plane
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: plane
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U plane -d plane"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:8.2.11@sha256:b0b01167ff47bc3868e56a967895a26be4230891a1f42a78ab61cdd227accc8d
+    restart: unless-stopped
+    command:
+      - redis-server
+      - --requirepass
+      - ${REDIS_PASSWORD:?set REDIS_PASSWORD in .env}
+      - --appendonly
+      - "yes"
+      - --maxmemory
+      - 256mb
+      - --maxmemory-policy
+      - volatile-lru
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" --no-auth-warning ping | grep -q PONG"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?set REDIS_PASSWORD in .env}
+
+  # Local S3 stand-in (same server Plane's own compose file uses).
+  s3:
+    image: pgsty/silo:RELEASE.2026-09-16T00-00-00Z@sha256:635197cb9f36d01bee221d34d1c7d7960f6a95c48b0b6c01d99cd13bdae51a46
+    restart: unless-stopped
+    command: server /export
+    ports:
+      - "9000:9000"
+    environment:
+      MINIO_ROOT_USER: plane-local
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:?set S3_SECRET_KEY in .env}
+    volumes:
+      - s3data:/export
+
+volumes:
+  pgdata:
+  redisdata:
+  s3data:

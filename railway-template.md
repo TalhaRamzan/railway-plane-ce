@@ -9,7 +9,7 @@ Final layout: **3 services + 1 bucket**
 
 | Name (exact) | Kind | Source | Public | Volume |
 |---|---|---|---|---|
-| `Plane` | service | GitHub repo (this repo) -> builds `Dockerfile` | yes, port 80 | none |
+| `Plane` | service | GitHub repo (this repo) -> builds `Dockerfile` | yes, port 8080 | none |
 | `Postgres` | database | Railway PostgreSQL | no | yes (Railway default) |
 | `Redis` | database | Railway Redis | no | yes, `/data` |
 | `Bucket` | bucket | Railway Storage Bucket | (S3 endpoint is always public) | n/a |
@@ -73,7 +73,7 @@ Names matter: the variable references below use `Postgres`, `Redis` and
 - [ ] Build: Railway picks up `railway.json` (Dockerfile builder, healthcheck
       `/api/instances/`, healthcheck timeout 600 s, restart ON_FAILURE x10,
       1 replica, draining 30 s). Confirm these show in Settings.
-- [ ] Settings > Networking > **Generate Domain**, target port **80**.
+- [ ] Settings > Networking > **Generate Domain**, target port **8080** (Railway injects `PORT=8080`; Caddy listens on `:$PORT`).
 - [ ] Do not attach a volume (Plane keeps no local state; logs go to stdout).
 - [ ] Resource limits (recommended to avoid bill shock): memory **2 GB**, CPU 2 vCPU.
 - [ ] Variables (Raw Editor, paste, then review):
@@ -81,7 +81,6 @@ Names matter: the variable references below use `Postgres`, `Redis` and
 ```
 DOMAIN_NAME=${{RAILWAY_PUBLIC_DOMAIN}}
 APP_PROTOCOL=https
-PORT=80
 SECRET_KEY=${{secret(64, "abcdef0123456789")}}
 LIVE_SERVER_SECRET_KEY=${{secret(64, "abcdef0123456789")}}
 DATABASE_URL=${{Postgres.DATABASE_URL}}

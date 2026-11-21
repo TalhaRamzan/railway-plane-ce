@@ -28,7 +28,7 @@ no MinIO, no separate web/admin/space/worker/beat containers.
                     Railway edge (HTTPS)
                             |
               +-------------v--------------+        +-----------------+
-              |  Plane (1 container, :80)  |------->| Railway Bucket  |
+              | Plane (1 container, :8080) |------->| Railway Bucket  |
               |  Caddy proxy               |  S3    | (attachments)   |
               |   /         web app        |        +-----------------+
               |   /god-mode admin          |              ^
@@ -136,7 +136,7 @@ limit on the Plane service (Settings > Resource limits, 2 GB is safe).
 |---|---|---|
 | `DOMAIN_NAME` | `${{RAILWAY_PUBLIC_DOMAIN}}` | Host users open. Set to your custom domain after adding it. |
 | `APP_PROTOCOL` | `https` | Railway terminates TLS at its edge. |
-| `PORT` | `80` | Caddy listens on 80; Railway routes and healthchecks there. |
+| `PORT` | Railway's `8080` (not set by the template) | Caddy listens on `:$PORT` (`SITE_ADDRESS`, falls back to 80 when `PORT` is unset, e.g. locally). The public domain and healthcheck use 8080. |
 | `SECRET_KEY` | `${{secret(64, "abcdef0123456789")}}` | Django key; also encrypts saved instance settings. **Never change it.** |
 | `LIVE_SERVER_SECRET_KEY` | `${{secret(64, "abcdef0123456789")}}` | Live collaboration server secret. |
 | `DATABASE_URL` | `${{Postgres.DATABASE_URL}}` | Private network URL. |
@@ -160,7 +160,7 @@ limit on the Plane service (Settings > Resource limits, 2 GB is safe).
 
 ## Custom domain
 
-1. Plane service > Settings > Networking > **Custom Domain** (target port 80), add the DNS record.
+1. Plane service > Settings > Networking > **Custom Domain** (target port 8080), add the DNS record.
 2. Set `DOMAIN_NAME` to the custom domain (no `https://`) and redeploy.
    Plane's `WEB_URL`, CORS and cookies follow `DOMAIN_NAME`, and the bucket
    CORS rule is updated automatically on boot.

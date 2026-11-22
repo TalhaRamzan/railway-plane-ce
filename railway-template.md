@@ -11,7 +11,7 @@ Final layout: **3 services + 1 bucket**
 |---|---|---|---|---|
 | `Plane` | service | GitHub repo (this repo) -> builds `Dockerfile` | yes, port 8080 | none |
 | `Postgres` | image | `postgres:17.11` (digest-pinned) | no | yes, `/var/lib/postgresql` |
-| `Redis` | image | `redis:8.6.8` (digest-pinned) | no | none in the published template (see note) |
+| `Redis` | image | `redis:8.6.8` (digest-pinned) | no | `/data` (append-only persistence) |
 | `Bucket` | bucket | Railway Storage Bucket | (S3 endpoint is always public) | n/a |
 
 Names matter: the variable references below use `Postgres`, `Redis` and
@@ -24,7 +24,7 @@ Names matter: the variable references below use `Postgres`, `Redis` and
 > the template was generated from a project with placeholder images, then each repo service's source was switched
 > to this GitHub repo in the template composer. Only secrets and references are template variables; every other
 > setting has a default in the image (Dockerfile `ENV` / entrypoint `${VAR:-default}`). Railway injects `PORT=8080`;
-> the public domain targets 8080. Postgres is `postgres:17.11` (volume `/var/lib/postgresql`); Redis is `redis:8.6.8` without a volume; Caddy listens on `:$PORT`.
+> the public domain targets 8080. Postgres is `postgres:17.11` (volume `/var/lib/postgresql`); Redis is `redis:8.6.8` with a `/data` volume (added 2026-11-22; start command `/bin/sh -c "chown -R redis:redis /data 2>/dev/null; exec docker-entrypoint.sh redis-server --requirepass \"$REDIS_PASSWORD\" --appendonly yes --dir /data --maxmemory 256mb --maxmemory-policy volatile-lru"`); Caddy listens on `:$PORT`.
 > Verified by deploying the template itself into an empty project with zero inputs.
 
 ---

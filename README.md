@@ -17,7 +17,7 @@ no MinIO, no separate web/admin/space/worker/beat containers.
 | Plane version | **v1.5.0** (released 2026-11-16, includes a large set of access-control security fixes) |
 | Plane image | `makeplane/plane-aio-community:v1.5.0@sha256:16a2680cc7ab0c1ef86396905563816246692e32302154cb2a4f335276ac03b0` (official all-in-one image) |
 | Postgres | `postgres:17.11` (digest-pinned), volume `/var/lib/postgresql` |
-| Redis | `redis:8.6.8` (digest-pinned, no volume; cache **and** Celery broker) |
+| Redis | `redis:8.6.8` (digest-pinned, volume `/data` with append-only persistence, 256 MB cap; cache **and** Celery broker, so queued jobs survive a Redis restart) |
 | File storage | Railway Bucket (S3-compatible, private, presigned URLs) |
 | Idle RAM (measured locally) | Plane ~0.8-0.9 GB, Postgres ~30-40 MB, Redis ~10 MB |
 | Expected cost | ~$10-16 / month of Railway usage for a small team (see below) |

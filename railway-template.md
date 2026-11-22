@@ -17,6 +17,16 @@ Final layout: **3 services + 1 bucket**
 Names matter: the variable references below use `Postgres`, `Redis` and
 `Bucket`. If you rename a service, update every `${{Name.VAR}}`.
 
+> **Published template:** https://railway.com/deploy/plane-ce (published 2026-11-22).
+>
+> **How the published version was built** (Railway's template generator keeps only variables containing `${{...}}`,
+> drops plain values and service healthcheck timeouts, and needs a GitHub-app link to generate repo services):
+> the template was generated from a project with placeholder images, then each repo service's source was switched
+> to this GitHub repo in the template composer. Only secrets and references are template variables; every other
+> setting has a default in the image (Dockerfile `ENV` / entrypoint `${VAR:-default}`). Railway injects `PORT=8080`;
+> the public domain targets 8080. Postgres is `postgres:17.11` (volume `/var/lib/postgresql`); Redis is `redis:8.6.8` without a volume; Caddy listens on `:$PORT`.
+> Verified by deploying the template itself into an empty project with zero inputs.
+
 ---
 
 ## 0. Before you start

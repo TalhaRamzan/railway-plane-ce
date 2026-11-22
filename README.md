@@ -10,7 +10,7 @@ no MinIO, no separate web/admin/space/worker/beat containers.
 > contributors: <https://github.com/makeplane/plane>. This repository only
 > holds deployment glue (MIT, see [LICENSE](LICENSE)).
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/REPLACE_WITH_TEMPLATE_CODE)
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/plane-ce)
 
 | | |
 |---|---|

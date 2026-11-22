@@ -10,8 +10,8 @@ Final layout: **3 services + 1 bucket**
 | Name (exact) | Kind | Source | Public | Volume |
 |---|---|---|---|---|
 | `Plane` | service | GitHub repo (this repo) -> builds `Dockerfile` | yes, port 8080 | none |
-| `Postgres` | database | Railway PostgreSQL | no | yes (Railway default) |
-| `Redis` | database | Railway Redis | no | yes, `/data` |
+| `Postgres` | image | `postgres:17.11` (digest-pinned) | no | yes, `/var/lib/postgresql` |
+| `Redis` | image | `redis:8.6.8` (digest-pinned) | no | none in the published template (see note) |
 | `Bucket` | bucket | Railway Storage Bucket | (S3 endpoint is always public) | n/a |
 
 Names matter: the variable references below use `Postgres`, `Redis` and
